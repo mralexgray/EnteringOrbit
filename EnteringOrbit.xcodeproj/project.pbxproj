@@ -18,6 +18,19 @@
 		B77550AB17F080460029CBB0 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B775508A17F080460029CBB0 /* Cocoa.framework */; };
 		B77550B317F080460029CBB0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = B77550B117F080460029CBB0 /* InfoPlist.strings */; };
 		B77550B517F080460029CBB0 /* EnteringOrbitTests.m in Sources */ = {isa = PBXBuildFile; fileRef = B77550B417F080460029CBB0 /* EnteringOrbitTests.m */; };
+		B77550D017F0808D0029CBB0 /* KSMessenger.m in Sources */ = {isa = PBXBuildFile; fileRef = B77550C517F0808D0029CBB0 /* KSMessenger.m */; };
+		B77550D117F0808D0029CBB0 /* KSMessenger.m in Sources */ = {isa = PBXBuildFile; fileRef = B77550C517F0808D0029CBB0 /* KSMessenger.m */; };
+		B77550D217F0808D0029CBB0 /* base64.c in Sources */ = {isa = PBXBuildFile; fileRef = B77550C717F0808D0029CBB0 /* base64.c */; };
+		B77550D317F0808D0029CBB0 /* base64.c in Sources */ = {isa = PBXBuildFile; fileRef = B77550C717F0808D0029CBB0 /* base64.c */; };
+		B77550D417F0808D0029CBB0 /* NSData+SRB64Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = B77550CA17F0808D0029CBB0 /* NSData+SRB64Additions.m */; };
+		B77550D517F0808D0029CBB0 /* NSData+SRB64Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = B77550CA17F0808D0029CBB0 /* NSData+SRB64Additions.m */; };
+		B77550D617F0808D0029CBB0 /* SRWebSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = B77550CD17F0808D0029CBB0 /* SRWebSocket.m */; };
+		B77550D717F0808D0029CBB0 /* SRWebSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = B77550CD17F0808D0029CBB0 /* SRWebSocket.m */; };
+		B77550D817F0808D0029CBB0 /* WebSocketClientController.m in Sources */ = {isa = PBXBuildFile; fileRef = B77550CF17F0808D0029CBB0 /* WebSocketClientController.m */; };
+		B77550D917F0808D0029CBB0 /* WebSocketClientController.m in Sources */ = {isa = PBXBuildFile; fileRef = B77550CF17F0808D0029CBB0 /* WebSocketClientController.m */; };
+		B77550DB17F081140029CBB0 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B77550DA17F081140029CBB0 /* Security.framework */; };
+		B77550DE17F082FB0029CBB0 /* EntreringOrbit.m in Sources */ = {isa = PBXBuildFile; fileRef = B77550DD17F082FB0029CBB0 /* EntreringOrbit.m */; };
+		B77550DF17F082FB0029CBB0 /* EntreringOrbit.m in Sources */ = {isa = PBXBuildFile; fileRef = B77550DD17F082FB0029CBB0 /* EntreringOrbit.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -50,6 +63,20 @@
 		B77550B017F080460029CBB0 /* EnteringOrbitTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "EnteringOrbitTests-Info.plist"; sourceTree = "<group>"; };
 		B77550B217F080460029CBB0 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		B77550B417F080460029CBB0 /* EnteringOrbitTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EnteringOrbitTests.m; sourceTree = "<group>"; };
+		B77550C417F0808D0029CBB0 /* KSMessenger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KSMessenger.h; sourceTree = "<group>"; };
+		B77550C517F0808D0029CBB0 /* KSMessenger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KSMessenger.m; sourceTree = "<group>"; };
+		B77550C717F0808D0029CBB0 /* base64.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = base64.c; sourceTree = "<group>"; };
+		B77550C817F0808D0029CBB0 /* base64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = base64.h; sourceTree = "<group>"; };
+		B77550C917F0808D0029CBB0 /* NSData+SRB64Additions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSData+SRB64Additions.h"; sourceTree = "<group>"; };
+		B77550CA17F0808D0029CBB0 /* NSData+SRB64Additions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSData+SRB64Additions.m"; sourceTree = "<group>"; };
+		B77550CB17F0808D0029CBB0 /* SocketRocket-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SocketRocket-Prefix.pch"; sourceTree = "<group>"; };
+		B77550CC17F0808D0029CBB0 /* SRWebSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SRWebSocket.h; sourceTree = "<group>"; };
+		B77550CD17F0808D0029CBB0 /* SRWebSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SRWebSocket.m; sourceTree = "<group>"; };
+		B77550CE17F0808D0029CBB0 /* WebSocketClientController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WebSocketClientController.h; sourceTree = "<group>"; };
+		B77550CF17F0808D0029CBB0 /* WebSocketClientController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WebSocketClientController.m; sourceTree = "<group>"; };
+		B77550DA17F081140029CBB0 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		B77550DC17F082FB0029CBB0 /* EntreringOrbit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EntreringOrbit.h; sourceTree = "<group>"; };
+		B77550DD17F082FB0029CBB0 /* EntreringOrbit.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EntreringOrbit.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,6 +84,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B77550DB17F081140029CBB0 /* Security.framework in Frameworks */,
 				B775508B17F080460029CBB0 /* Cocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -76,6 +104,8 @@
 		B775507E17F080460029CBB0 = {
 			isa = PBXGroup;
 			children = (
+				B77550C317F0808D0029CBB0 /* KSMessenger */,
+				B77550C617F0808D0029CBB0 /* SocketRocket */,
 				B775509017F080460029CBB0 /* EnteringOrbit */,
 				B77550AE17F080460029CBB0 /* EnteringOrbitTests */,
 				B775508917F080460029CBB0 /* Frameworks */,
@@ -95,6 +125,7 @@
 		B775508917F080460029CBB0 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				B77550DA17F081140029CBB0 /* Security.framework */,
 				B775508A17F080460029CBB0 /* Cocoa.framework */,
 				B77550A917F080460029CBB0 /* XCTest.framework */,
 				B775508C17F080460029CBB0 /* Other Frameworks */,
@@ -132,6 +163,8 @@
 				B775509617F080460029CBB0 /* main.m */,
 				B775509817F080460029CBB0 /* EnteringOrbit-Prefix.pch */,
 				B775509917F080460029CBB0 /* Credits.rtf */,
+				B77550DC17F082FB0029CBB0 /* EntreringOrbit.h */,
+				B77550DD17F082FB0029CBB0 /* EntreringOrbit.m */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -152,6 +185,31 @@
 				B77550B117F080460029CBB0 /* InfoPlist.strings */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		B77550C317F0808D0029CBB0 /* KSMessenger */ = {
+			isa = PBXGroup;
+			children = (
+				B77550C417F0808D0029CBB0 /* KSMessenger.h */,
+				B77550C517F0808D0029CBB0 /* KSMessenger.m */,
+			);
+			path = KSMessenger;
+			sourceTree = "<group>";
+		};
+		B77550C617F0808D0029CBB0 /* SocketRocket */ = {
+			isa = PBXGroup;
+			children = (
+				B77550C717F0808D0029CBB0 /* base64.c */,
+				B77550C817F0808D0029CBB0 /* base64.h */,
+				B77550C917F0808D0029CBB0 /* NSData+SRB64Additions.h */,
+				B77550CA17F0808D0029CBB0 /* NSData+SRB64Additions.m */,
+				B77550CB17F0808D0029CBB0 /* SocketRocket-Prefix.pch */,
+				B77550CC17F0808D0029CBB0 /* SRWebSocket.h */,
+				B77550CD17F0808D0029CBB0 /* SRWebSocket.m */,
+				B77550CE17F0808D0029CBB0 /* WebSocketClientController.h */,
+				B77550CF17F0808D0029CBB0 /* WebSocketClientController.m */,
+			);
+			path = SocketRocket;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -252,7 +310,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B77550D617F0808D0029CBB0 /* SRWebSocket.m in Sources */,
+				B77550DE17F082FB0029CBB0 /* EntreringOrbit.m in Sources */,
+				B77550D817F0808D0029CBB0 /* WebSocketClientController.m in Sources */,
+				B77550D417F0808D0029CBB0 /* NSData+SRB64Additions.m in Sources */,
+				B77550D017F0808D0029CBB0 /* KSMessenger.m in Sources */,
 				B775509E17F080460029CBB0 /* AppDelegate.m in Sources */,
+				B77550D217F0808D0029CBB0 /* base64.c in Sources */,
 				B775509717F080460029CBB0 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -261,7 +325,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B77550D517F0808D0029CBB0 /* NSData+SRB64Additions.m in Sources */,
 				B77550B517F080460029CBB0 /* EnteringOrbitTests.m in Sources */,
+				B77550D717F0808D0029CBB0 /* SRWebSocket.m in Sources */,
+				B77550D317F0808D0029CBB0 /* base64.c in Sources */,
+				B77550DF17F082FB0029CBB0 /* EntreringOrbit.m in Sources */,
+				B77550D917F0808D0029CBB0 /* WebSocketClientController.m in Sources */,
+				B77550D117F0808D0029CBB0 /* KSMessenger.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -12,4 +12,6 @@
 
 @property (assign) IBOutlet NSWindow *window;
 
+- (id) initAppDelegateWithParam:(NSDictionary * )dict;
+
 @end
