@@ -14,6 +14,7 @@
 #define KEY_LIMITSEC    (@"-l")
 #define KEY_TARGET      (@"-t")
 
+#define COMMAND_TAIL    (@"/usr/bin/tail")
 
 @implementation AppDelegate {
     NSDictionary * paramDict;
@@ -89,33 +90,39 @@
                                    @"interact;"];
     
     NSArray * paramArray = @[cHead, [expectParamArray componentsJoinedByString:@"\n"]];
-
-    NSPipe * pipeFromSSH = [[NSPipe alloc]init];
     
+    
+    // tail task
+    NSTask * tail = [[NSTask alloc]init];
+    [tail setLaunchPath:COMMAND_TAIL];
+    [tail setArguments:@[@"-f", tempLogFilePath]];
+    [tail launch];
+    
+    
+    // ssh task
     NSTask * ssh = [[NSTask alloc]init];
     [ssh setLaunchPath:expect];
     [ssh setArguments:paramArray];
     
     [ssh setStandardOutput:outhand];
     [ssh setStandardError:outhand];
-    
-    NSFileHandle * fileHandleForReading = [pipeFromSSH fileHandleForReading];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(update:) name:nil object:nil];
-    
     [ssh launch];
     
     
+    // read & publish
+    FILE * input = stdin;
     
-    
-    //    ssh
-    
-    //    NSTask * tail = [[NSTask alloc]init];
-    //    [tail setLaunchPath:@"ls"];
-    ////    [tail setArguments:paramArray];
-    //    [tail setStandardInput:pipeFromSSH];
-    //
-    //    [tail launch];
+    char buffer[BUFSIZ];
+    while(fgets(buffer, BUFSIZ, input)) {
+        NSString * message = [NSString stringWithCString:buffer encoding:NSUTF8StringEncoding];
+        [self send:message];
+    }
 }
+
+- (void) send:(NSString * )input {
+    NSLog(@"読めるのかしら　%@", input);
+}
+
 
 - (void) update:(NSNotification * )update {
     if ([update name] == NSApplicationWillUpdateNotification) return;
