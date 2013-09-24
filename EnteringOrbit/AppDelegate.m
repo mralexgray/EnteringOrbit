@@ -11,24 +11,40 @@
 #import "KSMessenger.h"
 #import "WebSocketClientController.h"
 
-#define KEY_LIMITSEC        (@"-l")
-#define KEY_TAILTARGET      (@"-t")
-#define KEY_CONNECTTARGET   (@"-c")
+
 
 #define COMMAND_TAIL    (@"/usr/bin/tail")
 
 @implementation AppDelegate {
     NSDictionary * paramDict;
     
+    NSString * m_connectTarget;
+    NSString * m_tailTarget;
+    
     WebSocketClientController * wsCont;
 }
 
 
 - (id) initAppDelegateWithParam:(NSDictionary * )dict {
+    if (dict[@"-NSDocumentRevisionsDebugMode"]) {
+        NSLog(@"debug run -> exit");
+        exit(0);
+    }
+    
+    if (dict[@"-XCTest"]) {
+        return nil;
+    }
+    
+    NSAssert1(dict[KEY_CONNECTTARGET], @"connection target required. %@ targetUserName@targetMachineName", KEY_CONNECTTARGET);
+    m_connectTarget = paramDict[KEY_CONNECTTARGET];
+    
+    
+    NSAssert1(dict[KEY_TAILTARGET], @"tail target required. %@ ./something.txt", KEY_TAILTARGET);
+    m_tailTarget = paramDict[KEY_TAILTARGET];
+
+    
     if (self = [super init]) {
-        //        paramDict = [[NSDictionary alloc]initWithDictionary:dict];
-        paramDict = @{KEY_CONNECTTARGET:@"mondogrosso@mondogrosso.201104392.members.btmm.icloud.com",
-                      KEY_TAILTARGET:@"./Desktop/testLog.txt"};
+        paramDict = [[NSDictionary alloc]initWithDictionary:dict];
     }
     return self;
 }
@@ -36,32 +52,6 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
     
-    
-    NSFileManager * fileManager = [NSFileManager defaultManager];
-    NSError * error;
-    
-    NSString * tempLogFilePath = [[NSString alloc]initWithFormat:@"%@/%@", [[NSBundle mainBundle] bundlePath], @"temp.txt"];
-    
-    // if exist, delete
-    NSFileHandle * readHandle = [NSFileHandle fileHandleForReadingAtPath:tempLogFilePath];
-    if (readHandle) {// delete
-        [fileManager removeItemAtPath:tempLogFilePath error:&error];
-    }
-    
-    
-    // create temporary output
-    bool makeTempFile = [fileManager createFileAtPath:tempLogFilePath contents:nil attributes:nil];
-    NSAssert1(makeTempFile, @"failed to make tempfile @ %@, please chech chmod", tempLogFilePath);
-    
-    NSFileHandle * outhand = [NSFileHandle fileHandleForWritingAtPath:tempLogFilePath];
-    NSAssert(outhand, @"nil");
-    
-    
-    
-    /**
-     NSTaskでsshで繋いでlogがあるところまで移動してログの内容をtailしてWebSocketで出力する。
-     プロセスの開始時にWebSocketクライアントになる。
-     */
     NSString * expect = @"/usr/bin/expect";
     
     //    http://www.math.kobe-u.ac.jp/~kodama/tips-expect.html
@@ -72,37 +62,36 @@
     //    send \"tail -f ./Desktop/130715_2_テロップ.txt\n\";
     //    interact;"
     
+    
+    
     NSString * cHead = @"-c";
     
-    int timeLimitSec = 30;
-    if (paramDict[KEY_LIMITSEC]) timeLimitSec = [paramDict[KEY_LIMITSEC] intValue];
-    NSString * timeLimitPhrase = [[NSString alloc] initWithFormat:@"set timeout %d;", timeLimitSec];
-    
-    NSAssert1(paramDict[KEY_CONNECTTARGET], @"connection target required. %@ targetUserName@targetMachineName", KEY_CONNECTTARGET);
-    
-    NSString * connectTarget = [[NSString alloc]initWithFormat:@"spawn ssh %@;" ,paramDict[KEY_CONNECTTARGET]];
+    // connect
+    NSString * connectTarget = [[NSString alloc]initWithFormat:@"spawn ssh %@;", m_connectTarget];
     
     
-    NSAssert1(paramDict[KEY_TAILTARGET], @"tail target required. %@ ./something.txt", KEY_TAILTARGET);
-    NSString * tailTarget = paramDict[KEY_TAILTARGET];
-    NSString * tailPhrase = [[NSString alloc]initWithFormat:@"send \"tail -f %@\n\";", tailTarget];
+    // echo
+    CFUUIDRef uuidObj = CFUUIDCreate(nil);
+    NSString * uuidString = (NSString * )CFBridgingRelease(CFUUIDCreateString(nil, uuidObj));
+    CFRelease(uuidObj);
+    NSString * echoPhrase = [[NSString alloc]initWithFormat:@"send \"echo %@\n\";", uuidString];
+    
+    
+    // tail
+    NSString * tailPhrase = [[NSString alloc]initWithFormat:@"send \"tail -f %@\n\";", m_tailTarget];
+    
+
     
     /*
      combine lines
      */
-    NSArray * expectParamArray = @[timeLimitPhrase,
-                                   connectTarget,
+    NSArray * expectParamArray = @[connectTarget,
+                                   echoPhrase,
                                    tailPhrase,
                                    @"interact;"];
     
     NSArray * paramArray = @[cHead, [expectParamArray componentsJoinedByString:@"\n"]];
     
-    
-    // tail task
-    NSTask * tail = [[NSTask alloc]init];
-    [tail setLaunchPath:COMMAND_TAIL];
-    [tail setArguments:@[@"-f", tempLogFilePath]];
-    [tail launch];
     
     
     // ssh task
@@ -117,38 +106,41 @@
     [ssh launch];
     
     
+    
+    
     // read & publish
     NSFileHandle * publishHandle = [readPipe fileHandleForReading];
     
     FILE * fp = fdopen([publishHandle fileDescriptor], "r");
     
     
+    // stopper
+    int ready = -2;
+    
+    
+    // start publish after echo +1
     char buffer[BUFSIZ];
     while(fgets(buffer, BUFSIZ, fp)) {
+
         NSString * message = [NSString stringWithCString:buffer encoding:NSUTF8StringEncoding];
-        [self send:message];
+        
+        if (ready == 0) {
+            [self send:message];
+        } else if ([message hasPrefix:uuidString]) {
+            ready = -1;
+        } else if (ready == -1) {
+            ready = 0;
+        }
+        
     }
-    NSLog(@"over");
 }
 
 
-
+/**
+ 特定のkey位置以降に開始されるsend
+ */
 - (void) send:(NSString * )input {
     NSLog(@"読めるのかしら　%@", input);
-}
-
-
-- (void) update:(NSNotification * )update {
-    if ([update name] == NSApplicationWillUpdateNotification) return;
-    if ([update name] == NSTextInputContextKeyboardSelectionDidChangeNotification) return;
-    if ([update name] == NSApplicationDidUpdateNotification) return;
-    if ([update name] == NSApplicationDidBecomeActiveNotification) return;
-    if ([update name] == NSApplicationWillBecomeActiveNotification) return;
-    if ([update name] == NSApplicationDidResignActiveNotification) return;
-    if ([update name] == NSApplicationWillResignActiveNotification) return;
-    
-    
-    NSLog(@"update %@", update);//もしかしたらキャッチできるかもしれない。
 }
 
 @end

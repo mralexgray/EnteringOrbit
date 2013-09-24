@@ -8,6 +8,13 @@
 
 #import <Cocoa/Cocoa.h>
 
+
+
+#define KEY_TAILTARGET      (@"-t")
+#define KEY_CONNECTTARGET   (@"-c")
+#define KEY_DEBUG           (@"--d")
+
+
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 
 @property (assign) IBOutlet NSWindow *window;

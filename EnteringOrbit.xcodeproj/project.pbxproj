@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B7047AA517F1F61D00B1B752 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B77550DA17F081140029CBB0 /* Security.framework */; };
 		B775508B17F080460029CBB0 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B775508A17F080460029CBB0 /* Cocoa.framework */; };
 		B775509517F080460029CBB0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = B775509317F080460029CBB0 /* InfoPlist.strings */; };
 		B775509717F080460029CBB0 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = B775509617F080460029CBB0 /* main.m */; };
@@ -44,6 +45,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		B7047AA317F1F61200B1B752 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		B7047AA617F1F7D000B1B752 /* TestParams.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TestParams.h; sourceTree = "<group>"; };
 		B775508717F080460029CBB0 /* EnteringOrbit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EnteringOrbit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B775508A17F080460029CBB0 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		B775508D17F080460029CBB0 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -93,6 +96,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B7047AA517F1F61D00B1B752 /* Security.framework in Frameworks */,
 				B77550AB17F080460029CBB0 /* Cocoa.framework in Frameworks */,
 				B77550AA17F080460029CBB0 /* XCTest.framework in Frameworks */,
 			);
@@ -125,6 +129,7 @@
 		B775508917F080460029CBB0 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				B7047AA317F1F61200B1B752 /* Accelerate.framework */,
 				B77550DA17F081140029CBB0 /* Security.framework */,
 				B775508A17F080460029CBB0 /* Cocoa.framework */,
 				B77550A917F080460029CBB0 /* XCTest.framework */,
@@ -174,6 +179,7 @@
 			children = (
 				B77550B417F080460029CBB0 /* EnteringOrbitTests.m */,
 				B77550AF17F080460029CBB0 /* Supporting Files */,
+				B7047AA617F1F7D000B1B752 /* TestParams.h */,
 			);
 			path = EnteringOrbitTests;
 			sourceTree = "<group>";
@@ -534,6 +540,7 @@
 				B77550BA17F080460029CBB0 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		B77550BB17F080460029CBB0 /* Build configuration list for PBXNativeTarget "EnteringOrbitTests" */ = {
 			isa = XCConfigurationList;
@@ -542,6 +549,7 @@
 				B77550BD17F080460029CBB0 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
