@@ -11,8 +11,9 @@
 #import "KSMessenger.h"
 #import "WebSocketClientController.h"
 
-#define KEY_LIMITSEC    (@"-l")
-#define KEY_TARGET      (@"-t")
+#define KEY_LIMITSEC        (@"-l")
+#define KEY_TAILTARGET      (@"-t")
+#define KEY_CONNECTTARGET   (@"-c")
 
 #define COMMAND_TAIL    (@"/usr/bin/tail")
 
@@ -26,7 +27,8 @@
 - (id) initAppDelegateWithParam:(NSDictionary * )dict {
     if (self = [super init]) {
         //        paramDict = [[NSDictionary alloc]initWithDictionary:dict];
-        paramDict = @{KEY_TARGET:@"mondogrosso@mondogrosso.201104392.members.btmm.icloud.com"};
+        paramDict = @{KEY_CONNECTTARGET:@"mondogrosso@mondogrosso.201104392.members.btmm.icloud.com",
+                      KEY_TAILTARGET:@"./Desktop/testLog.txt"};
     }
     return self;
 }
@@ -76,17 +78,21 @@
     if (paramDict[KEY_LIMITSEC]) timeLimitSec = [paramDict[KEY_LIMITSEC] intValue];
     NSString * timeLimitPhrase = [[NSString alloc] initWithFormat:@"set timeout %d;", timeLimitSec];
     
-    NSAssert1(paramDict[KEY_TARGET], @"target required. %@ targetUserName@targetMachineName", KEY_TARGET);
+    NSAssert1(paramDict[KEY_CONNECTTARGET], @"connection target required. %@ targetUserName@targetMachineName", KEY_CONNECTTARGET);
     
-    NSString * connectTarget = [[NSString alloc]initWithFormat:@"spawn ssh %@;" ,paramDict[KEY_TARGET]];
+    NSString * connectTarget = [[NSString alloc]initWithFormat:@"spawn ssh %@;" ,paramDict[KEY_CONNECTTARGET]];
     
+    
+    NSAssert1(paramDict[KEY_TAILTARGET], @"tail target required. %@ ./something.txt", KEY_TAILTARGET);
+    NSString * tailTarget = paramDict[KEY_TAILTARGET];
+    NSString * tailPhrase = [[NSString alloc]initWithFormat:@"send \"tail -f %@\n\";", tailTarget];
     
     /*
      combine lines
      */
     NSArray * expectParamArray = @[timeLimitPhrase,
                                    connectTarget,
-                                   @"send \"tail -f ./Desktop/testLog.txt\n\";",
+                                   tailPhrase,
                                    @"interact;"];
     
     NSArray * paramArray = @[cHead, [expectParamArray componentsJoinedByString:@"\n"]];
@@ -114,16 +120,18 @@
     // read & publish
     NSFileHandle * publishHandle = [readPipe fileHandleForReading];
     
-    FILE * my_file_pointer = fdopen([publishHandle fileDescriptor], "r");
+    FILE * fp = fdopen([publishHandle fileDescriptor], "r");
     
     
     char buffer[BUFSIZ];
-    while(fgets(buffer, BUFSIZ, my_file_pointer)) {
+    while(fgets(buffer, BUFSIZ, fp)) {
         NSString * message = [NSString stringWithCString:buffer encoding:NSUTF8StringEncoding];
         [self send:message];
     }
-    
+    NSLog(@"over");
 }
+
+
 
 - (void) send:(NSString * )input {
     NSLog(@"読めるのかしら　%@", input);
