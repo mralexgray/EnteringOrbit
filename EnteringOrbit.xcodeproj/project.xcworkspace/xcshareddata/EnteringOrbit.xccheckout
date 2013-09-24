@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>97507E8C-4ACB-4453-A987-3B1595173D8B</string>
+	<key>IDESourceControlProjectName</key>
+	<string>EnteringOrbit</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>ABE95419-BF5D-4432-B52C-CFCB69617F0B</key>
+		<string>https://github.com/sassembla/EnteringOrbit.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>EnteringOrbit.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>ABE95419-BF5D-4432-B52C-CFCB69617F0B</key>
+		<string>../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://github.com/sassembla/EnteringOrbit.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>110</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>ABE95419-BF5D-4432-B52C-CFCB69617F0B</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>ABE95419-BF5D-4432-B52C-CFCB69617F0B</string>
+			<key>IDESourceControlWCCName</key>
+			<string>EnteringOrbit</string>
+		</dict>
+	</array>
+</dict>
+</plist>

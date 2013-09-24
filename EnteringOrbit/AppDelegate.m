@@ -25,7 +25,7 @@
 
 - (id) initAppDelegateWithParam:(NSDictionary * )dict {
     if (self = [super init]) {
-//        paramDict = [[NSDictionary alloc]initWithDictionary:dict];
+        //        paramDict = [[NSDictionary alloc]initWithDictionary:dict];
         paramDict = @{KEY_TARGET:@"mondogrosso@mondogrosso.201104392.members.btmm.icloud.com"};
     }
     return self;
@@ -34,7 +34,7 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
     
-
+    
     NSFileManager * fileManager = [NSFileManager defaultManager];
     NSError * error;
     
@@ -54,7 +54,7 @@
     NSFileHandle * outhand = [NSFileHandle fileHandleForWritingAtPath:tempLogFilePath];
     NSAssert(outhand, @"nil");
     
-
+    
     
     /**
      NSTaskでsshで繋いでlogがあるところまで移動してログの内容をtailしてWebSocketで出力する。
@@ -62,13 +62,13 @@
      */
     NSString * expect = @"/usr/bin/expect";
     
-//    http://www.math.kobe-u.ac.jp/~kodama/tips-expect.html
+    //    http://www.math.kobe-u.ac.jp/~kodama/tips-expect.html
     
-//    expect
-//    -c "set timeout 30;
-//    spawn ssh mondogrosso@mondogrosso.201104392.members.btmm.icloud.com;
-//    send \"tail -f ./Desktop/130715_2_テロップ.txt\n\";
-//    interact;"
+    //    expect
+    //    -c "set timeout 30;
+    //    spawn ssh mondogrosso@mondogrosso.201104392.members.btmm.icloud.com;
+    //    send \"tail -f ./Desktop/130715_2_テロップ.txt\n\";
+    //    interact;"
     
     NSString * cHead = @"-c";
     
@@ -104,19 +104,25 @@
     [ssh setLaunchPath:expect];
     [ssh setArguments:paramArray];
     
-    [ssh setStandardOutput:outhand];
-    [ssh setStandardError:outhand];
+    NSPipe * readPipe = [[NSPipe alloc]init];
+    
+    [ssh setStandardOutput:readPipe];
+    [ssh setStandardError:readPipe];
     [ssh launch];
     
     
     // read & publish
-    FILE * input = stdin;
+    NSFileHandle * publishHandle = [readPipe fileHandleForReading];
+    
+    FILE * my_file_pointer = fdopen([publishHandle fileDescriptor], "r");
+    
     
     char buffer[BUFSIZ];
-    while(fgets(buffer, BUFSIZ, input)) {
+    while(fgets(buffer, BUFSIZ, my_file_pointer)) {
         NSString * message = [NSString stringWithCString:buffer encoding:NSUTF8StringEncoding];
         [self send:message];
     }
+    
 }
 
 - (void) send:(NSString * )input {
