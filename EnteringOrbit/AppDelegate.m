@@ -16,6 +16,8 @@
 #define COMMAND_TAIL    (@"/usr/bin/tail")
 
 @implementation AppDelegate {
+    int m_state;
+    
     NSDictionary * paramDict;
     
     NSString * m_connectTarget;
@@ -35,22 +37,31 @@
         return nil;
     }
     
-    NSAssert1(dict[KEY_CONNECTTARGET], @"connection target required. %@ targetUserName@targetMachineName", KEY_CONNECTTARGET);
-    m_connectTarget = paramDict[KEY_CONNECTTARGET];
-    
-    
-    NSAssert1(dict[KEY_TAILTARGET], @"tail target required. %@ ./something.txt", KEY_TAILTARGET);
-    m_tailTarget = paramDict[KEY_TAILTARGET];
-
-    
     if (self = [super init]) {
+        m_state = STATE_READY;
+        
         paramDict = [[NSDictionary alloc]initWithDictionary:dict];
+        
+        NSAssert1(dict[KEY_CONNECTTARGET], @"connection target required. %@ targetUserName@targetMachineName", KEY_CONNECTTARGET);
+        m_connectTarget = [[NSString alloc]initWithString:paramDict[KEY_CONNECTTARGET]];
+        
+        
+        NSAssert1(dict[KEY_TAILTARGET], @"tail target required. %@ ./something.txt", KEY_TAILTARGET);
+        m_tailTarget = [[NSString alloc]initWithString:paramDict[KEY_TAILTARGET]];
+
     }
     return self;
 }
 
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
+    [self run];
+}
+
+
+
+- (void) run {
+    m_state = STATE_CONNECTING;
     
     NSString * expect = @"/usr/bin/expect";
     
@@ -80,7 +91,7 @@
     // tail
     NSString * tailPhrase = [[NSString alloc]initWithFormat:@"send \"tail -f %@\n\";", m_tailTarget];
     
-
+    
     
     /*
      combine lines
@@ -114,25 +125,37 @@
     FILE * fp = fdopen([publishHandle fileDescriptor], "r");
     
     
-    // stopper
-    int ready = -2;
-    
     
     // start publish after echo +1
     char buffer[BUFSIZ];
     while(fgets(buffer, BUFSIZ, fp)) {
-
+        
         NSString * message = [NSString stringWithCString:buffer encoding:NSUTF8StringEncoding];
         
-        if (ready == 0) {
+        if (m_state == STATE_TAILING) {
             [self send:message];
         } else if ([message hasPrefix:uuidString]) {
-            ready = -1;
-        } else if (ready == -1) {
-            ready = 0;
+            m_state = STATE_WAITING_TAILKEY;
+        } else if (m_state == STATE_WAITING_TAILKEY) {
+            m_state = STATE_TAILING;
         }
-        
     }
+}
+
+
+
+
+- (BOOL) isConnecting {
+    return (m_state == STATE_CONNECTING);
+}
+
+- (BOOL) isWaiting {
+    return (m_state == STATE_WAITING_TAILKEY);
+}
+
+
+- (BOOL) isTailing {
+    return (m_state == STATE_TAILING);
 }
 
 

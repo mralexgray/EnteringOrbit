@@ -14,11 +14,27 @@
 #define KEY_CONNECTTARGET   (@"-c")
 #define KEY_DEBUG           (@"--d")
 
+enum STATE {
+    STATE_READY,
+    STATE_CONNECTING,
+    STATE_FAILED_TO_CONNECT,
+    
+    STATE_WAITING_TAILKEY,
+    
+    STATE_TAILING,
+    STATE_FAILED_TO_TAIL
+};
 
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 
 @property (assign) IBOutlet NSWindow *window;
 
 - (id) initAppDelegateWithParam:(NSDictionary * )dict;
+- (void) run;
+
+
+- (BOOL) isConnecting;
+- (BOOL) isWaiting;
+- (BOOL) isTailing;
 
 @end

@@ -30,12 +30,28 @@
 }
 
 
+
 - (void)testRunWithValidParam {
     NSDictionary * paramDict = @{
                                  KEY_CONNECTTARGET:TEST_CONNECT_TARGET,
                                  KEY_TAILTARGET:TEST_TAIL_TARGET};
     
     delegate = [[AppDelegate alloc] initAppDelegateWithParam:paramDict];
+}
+
+
+- (void)testRunWithValidParamWait1TailEmit {
+    NSDictionary * paramDict = @{
+                                 KEY_CONNECTTARGET:TEST_CONNECT_TARGET,
+                                 KEY_TAILTARGET:TEST_TAIL_TARGET};
+    
+    delegate = [[AppDelegate alloc] initAppDelegateWithParam:paramDict];
+    [delegate performSelector:@selector(run) withObject:nil afterDelay:0.0];
+    
+    // timelimit
+    [[NSRunLoop mainRunLoop]runUntilDate:[NSDate dateWithTimeIntervalSinceNow:5.0]];
+    
+    XCTAssert([delegate isTailing], @"not tailing");
 }
 
 
