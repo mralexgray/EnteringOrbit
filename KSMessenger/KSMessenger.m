@@ -747,11 +747,11 @@
 
 }
 - (void) closeConnection {
-    NSLog(@"i will exit, %@, %@", [self myName], [self myMID]);
+//    NSLog(@"i will exit, %@, %@", [self myName], [self myMID]);
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:OBSERVER_ID object:nil];//ノーティフィケーションから外す
 	
 	if ([self hasChild]) [self removeAllChildren];
-	NSAssert([[self childrenDict] count] == 0, @"childDict_%d",[[self childrenDict] count]);
+	NSAssert([[self childrenDict] count] == 0, @"childDict_%lu",[[self childrenDict] count]);
 	
 	if ([self hasParent]) [self removeFromParent];
 	NSAssert([myParentName isEqualToString:MS_DEFAULT_PARENTNAME], @"myParentName is not MS_DEFAULT_PARENTNAME");
@@ -777,7 +777,7 @@
 		[self setMyBodySelector:body_selector];
 		
 		myMID = [[NSString alloc] initWithString:[KSMessenger generateMID]];
-        NSLog(@"i am %@, %@",name, myMID);
+
         
         [self openConnection];
         

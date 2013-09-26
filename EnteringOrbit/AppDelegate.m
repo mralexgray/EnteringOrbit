@@ -24,7 +24,7 @@
     
     NSString * m_sourcetTarget;
     NSString * m_tailTarget;
-    NSString * m_connectTarget;
+    NSString * m_publishTarget;
     
     WebSocketClientController * m_client;
 }
@@ -54,8 +54,8 @@
         NSAssert1(dict[KEY_TAILTARGET], @"tail target required. %@  e.g. ./something.txt", KEY_TAILTARGET);
         m_tailTarget = [[NSString alloc]initWithString:paramDict[KEY_TAILTARGET]];
         
-        NSAssert1(dict[KEY_CONNECTTARGET], @"connect target required. %@ e.g. ", KEY_CONNECTTARGET);
-        m_connectTarget = [[NSString alloc]initWithString:paramDict[KEY_CONNECTTARGET]];
+        NSAssert1(dict[KEY_PUBLISHTARGET], @"connect target required. %@ e.g. ws://s.o.m.ewhere:someport", KEY_PUBLISHTARGET);
+        m_publishTarget = [[NSString alloc]initWithString:paramDict[KEY_PUBLISHTARGET]];
 
     }
     return self;
@@ -72,7 +72,7 @@
     m_state = STATE_MONOCAST_CONNECTING;
     
     m_client = [[WebSocketClientController alloc]initWithTargetAddress:@"" withMaster:[messenger myNameAndMID]];
-    [m_client connect:m_connectTarget];
+    [m_client connect:m_publishTarget];
 }
 
 - (void) drainViaTail {
@@ -145,7 +145,7 @@
     
     while(fgets(buffer, BUFSIZ, fp)) {
         NSString * message = [NSString stringWithCString:buffer encoding:NSUTF8StringEncoding];
-        NSLog(@"message %@", message);
+        if (paramDict[KEY_DEBUG]) NSLog(@"message %@", message);
         switch (m_state) {
             case STATE_TAILING:{
                 [self send:message];
@@ -191,6 +191,7 @@
 - (void) receiver:(NSNotification * ) notif {
     switch ([messenger execFrom:EO_WSCONT viaNotification:notif]) {
         case EXEC_CONNECTED:{
+            if (paramDict[KEY_DEBUG]) NSLog(@"WebSocket connected to publishTarget.");
             m_state = STATE_MONOCAST_CONNECTED;
             [self drainViaTail];
             break;
