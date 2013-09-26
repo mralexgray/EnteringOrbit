@@ -30,6 +30,7 @@
 }
 
 
+
 - (id) initAppDelegateWithParam:(NSDictionary * )dict {
     if (dict[@"-NSDocumentRevisionsDebugMode"]) {
         NSLog(@"debug run -> exit");
@@ -135,6 +136,10 @@
     // read & publish
     NSFileHandle * publishHandle = [readPipe fileHandleForReading];
     
+    // load errors-suffix
+    NSArray * peerErrors = [[NSArray alloc] initWithObjects:DEFINE_PEER_ERRORS];
+    
+    
     char buffer[BUFSIZ];
     
     int limitLineNum = [paramDict[KEY_LIMIT] intValue];
@@ -145,7 +150,8 @@
     
     while(fgets(buffer, BUFSIZ, fp)) {
         NSString * message = [NSString stringWithCString:buffer encoding:NSUTF8StringEncoding];
-        if (paramDict[KEY_DEBUG]) NSLog(@"message %@", message);
+//        if (paramDict[KEY_DEBUG])
+            NSLog(@"message %@", message);
         switch (m_state) {
             case STATE_TAILING:{
                 [self send:message];
@@ -159,6 +165,11 @@
             }
                 
             default:{//STATE_SOUCE_CONNECTED
+                
+                for (NSString * errorSuffix in peerErrors) {
+                    if ([message hasPrefix:errorSuffix]) m_state = STATE_SOURCE_FAILED;
+                }
+                
                 if ([message hasPrefix:indexStr]) m_state = STATE_WAITING_TAILKEY;
                 break;
             }
@@ -168,8 +179,15 @@
             // break loop.
             break;
         }
+        if (m_state == STATE_SOURCE_FAILED || m_state == STATE_MONOCAST_FAILED) {
+            // break loop.
+            break;
+        }
     }
-
+    
+    
+    // dead
+    [self close];
 }
 
 

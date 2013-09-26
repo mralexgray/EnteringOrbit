@@ -33,6 +33,11 @@ enum STATE {
     STATE_FAILED_TO_TAIL
 };
 
+
+#define DEFINE_PEER_ERRORS @"The authenticity of host", @"ssh: Could not resolve hostname ", nil
+
+
+
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 
 @property (assign) IBOutlet NSWindow *window;

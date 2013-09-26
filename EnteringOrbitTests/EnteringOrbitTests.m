@@ -61,7 +61,6 @@
     XCTAssert([delegate isTailing], @"not tailing");
 }
 
-
 - (void) testWebSocketClientAwaken {
     NSDictionary * paramDict = @{
                                  KEY_SOURCETARGET:TEST_SOURCE_TARGET,
@@ -77,6 +76,7 @@
     XCTAssert([delegate isConnectedToServer], @"not connected");
 }
 
+
 - (void) testWebSocnetClientConnectFailedThenKill {
     NSDictionary * paramDict = @{
                                  KEY_SOURCETARGET:TEST_SOURCE_TARGET,
@@ -87,22 +87,30 @@
     delegate = [[AppDelegate alloc] initAppDelegateWithParam:paramDict];
     [delegate run];
     
-    // 死んで終わるのでdelegateが死んでる
-    XCTFail(@"already dead");
+    // wait for line-tailed
+    while ([delegate status] < STATE_MONOCAST_FAILED) {
+        [[NSRunLoop mainRunLoop]runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
+    }
+    
+    XCTAssert([delegate status] == STATE_MONOCAST_FAILED, @"not match, %d", [delegate status]);
 }
 
 - (void) testPeerConnectFailedThenKill {
     NSDictionary * paramDict = @{
-                                 KEY_SOURCETARGET:TEST_SOURCE_TARGET,
+                                 KEY_SOURCETARGET:TEST_DUMMY_SOURCE_TARGET,
                                  KEY_TAILTARGET:TEST_TAIL_TARGET,
-                                 KEY_PUBLISHTARGET:TEST_DUMMY_PUBLISH_TARGET,
+                                 KEY_PUBLISHTARGET:TEST_PUBLISH_TARGET,
                                  KEY_LIMIT:TEST_LIMIT_5};
     
     delegate = [[AppDelegate alloc] initAppDelegateWithParam:paramDict];
     [delegate run];
     
-    // 死んで終わるのでdelegateが死んでる
-    XCTFail(@"already dead");
+    // wait for line-tailed
+    while ([delegate status] < STATE_SOURCE_FAILED) {
+        [[NSRunLoop mainRunLoop]runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
+    }
+    
+    XCTAssert([delegate status] == STATE_SOURCE_FAILED, @"not match, %d", [delegate status]);
 }
 
 
