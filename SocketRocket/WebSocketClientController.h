@@ -7,7 +7,24 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "SRWebSocket.h"
 
-@interface WebSocketClientController : NSObject
+#define EO_WSCONT (@"EO_WSCONT")
+
+enum EXEC {
+    EXEC_CONNECT,
+    EXEC_CONNECTED,
+    EXEC_SEND
+};
+
+@interface WebSocketClientController : NSObject <SRWebSocketDelegate>
+
+- (id) initWithTargetAddress:(NSString * )address withMaster:(NSString * )masternameAndId;
+
+- (BOOL) connected;
+
+
+- (void) connect:(NSString * )url;
+- (void) send:(NSString * )message;
 
 @end

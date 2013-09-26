@@ -11,12 +11,18 @@
 
 
 #define KEY_TAILTARGET      (@"-t")
+#define KEY_SOURCETARGET    (@"-s")
 #define KEY_CONNECTTARGET   (@"-c")
 #define KEY_DEBUG           (@"--d")
+#define KEY_LIMIT           (@"--l")
 
 enum STATE {
     STATE_READY,
-    STATE_CONNECTING,
+    STATE_MONOCAST_CONNECTING,
+    STATE_MONOCAST_CONNECTED,
+    STATE_SOUCE_CONNECTING,
+    STATE_SOUCE_CONNECTED,
+    
     STATE_FAILED_TO_CONNECT,
     
     STATE_WAITING_TAILKEY,
@@ -31,10 +37,12 @@ enum STATE {
 
 - (id) initAppDelegateWithParam:(NSDictionary * )dict;
 - (void) run;
+- (void) drainViaTail;
 
+- (BOOL) status;
 
-- (BOOL) isConnecting;
-- (BOOL) isWaiting;
 - (BOOL) isTailing;
+
+- (BOOL) isConnectedToServer;
 
 @end

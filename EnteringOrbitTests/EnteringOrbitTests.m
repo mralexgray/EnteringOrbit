@@ -10,6 +10,7 @@
 #import "AppDelegate.h"
 
 #import "TestParams.h"
+#define TEST_LIMIT_5   ([NSNumber numberWithInt:5])
 
 @interface EnteringOrbitTests : XCTestCase
 
@@ -33,8 +34,9 @@
 
 - (void)testRunWithValidParam {
     NSDictionary * paramDict = @{
-                                 KEY_CONNECTTARGET:TEST_CONNECT_TARGET,
-                                 KEY_TAILTARGET:TEST_TAIL_TARGET};
+                                 KEY_SOURCETARGET:TEST_CONNECT_TARGET,
+                                 KEY_TAILTARGET:TEST_TAIL_TARGET,
+                                 KEY_CONNECTTARGET:TEST_CONNECT_TARGET};
     
     delegate = [[AppDelegate alloc] initAppDelegateWithParam:paramDict];
 }
@@ -42,19 +44,37 @@
 
 - (void)testRunWithValidParamWait1TailEmit {
     NSDictionary * paramDict = @{
+                                 KEY_SOURCETARGET:TEST_CONNECT_TARGET,
+                                 KEY_TAILTARGET:TEST_TAIL_TARGET,
                                  KEY_CONNECTTARGET:TEST_CONNECT_TARGET,
-                                 KEY_TAILTARGET:TEST_TAIL_TARGET};
+                                 KEY_LIMIT:TEST_LIMIT_5};
     
     delegate = [[AppDelegate alloc] initAppDelegateWithParam:paramDict];
-    [delegate performSelector:@selector(run) withObject:nil afterDelay:0.0];
+    [delegate run];
     
-    // timelimit
-    [[NSRunLoop mainRunLoop]runUntilDate:[NSDate dateWithTimeIntervalSinceNow:5.0]];
+    // wait for line-tailed
+    while ([delegate status] < STATE_TAILING) {
+        [[NSRunLoop mainRunLoop]runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
+    }
     
     XCTAssert([delegate isTailing], @"not tailing");
 }
 
 
+- (void)testWebSocketClientAwaken {
+    NSDictionary * paramDict = @{
+                                 KEY_SOURCETARGET:TEST_CONNECT_TARGET,
+                                 KEY_TAILTARGET:TEST_TAIL_TARGET,
+                                 KEY_CONNECTTARGET:TEST_CONNECT_TARGET,
+                                 KEY_LIMIT:TEST_LIMIT_5};
+    
+    delegate = [[AppDelegate alloc] initAppDelegateWithParam:paramDict];
+    [delegate run];
+    
+    // wait for line-tailed
+    
+    XCTAssert([delegate isConnectedToServer], @"not connected");
+}
 
 
 @end
