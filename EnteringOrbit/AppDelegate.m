@@ -138,7 +138,7 @@
     
     // load errors-suffix
     NSArray * peerErrors = [[NSArray alloc] initWithObjects:DEFINE_PEER_ERRORS];
-    
+    NSString * m_error;
     
     char buffer[BUFSIZ];
     
@@ -150,8 +150,8 @@
     
     while(fgets(buffer, BUFSIZ, fp)) {
         NSString * message = [NSString stringWithCString:buffer encoding:NSUTF8StringEncoding];
-//        if (paramDict[KEY_DEBUG])
-            NSLog(@"message %@", message);
+        if (paramDict[KEY_DEBUG]) NSLog(@"message %@", message);
+        
         switch (m_state) {
             case STATE_TAILING:{
                 [self send:message];
@@ -168,6 +168,7 @@
                 
                 for (NSString * errorSuffix in peerErrors) {
                     if ([message hasPrefix:errorSuffix]) m_state = STATE_SOURCE_FAILED;
+                    m_error = [[NSString alloc]initWithFormat:@"%@ %@", errorSuffix, paramDict[KEY_SOURCETARGET]];
                 }
                 
                 if ([message hasPrefix:indexStr]) m_state = STATE_WAITING_TAILKEY;
@@ -179,12 +180,21 @@
             // break loop.
             break;
         }
-        if (m_state == STATE_SOURCE_FAILED || m_state == STATE_MONOCAST_FAILED) {
+        if (m_state == STATE_SOURCE_FAILED) {
             // break loop.
             break;
         }
     }
     
+    // output message
+    switch (m_state) {
+        case STATE_SOURCE_FAILED:{
+            NSLog(@"EnteringOrbit: %@", m_error);
+            break;
+        }
+        default:
+            break;
+    }
     
     // dead
     [self close];
@@ -216,14 +226,13 @@
         }
         case EXEC_FAILED:{
             m_state = STATE_MONOCAST_FAILED;
+            NSLog(@"EnteringOrbit: failed to connect: %@", paramDict[KEY_PUBLISHTARGET]);
             break;
         }
         default:
             break;
     }
 }
-
-
 
 /**
  特定のkey位置以降に開始されるsend
