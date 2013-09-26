@@ -47,6 +47,7 @@
 /* Begin PBXFileReference section */
 		B7047AA317F1F61200B1B752 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		B7047AA617F1F7D000B1B752 /* TestParams.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TestParams.h; sourceTree = "<group>"; };
+		B72A22BD17F4974900945C60 /* filter.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = filter.txt; sourceTree = "<group>"; };
 		B775508717F080460029CBB0 /* EnteringOrbit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EnteringOrbit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B775508A17F080460029CBB0 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		B775508D17F080460029CBB0 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -108,6 +109,7 @@
 		B775507E17F080460029CBB0 = {
 			isa = PBXGroup;
 			children = (
+				B72A22BD17F4974900945C60 /* filter.txt */,
 				B77550C317F0808D0029CBB0 /* KSMessenger */,
 				B77550C617F0808D0029CBB0 /* SocketRocket */,
 				B775509017F080460029CBB0 /* EnteringOrbit */,

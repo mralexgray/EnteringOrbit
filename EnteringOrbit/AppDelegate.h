@@ -13,6 +13,10 @@
 #define KEY_TAILTARGET      (@"-t")
 #define KEY_SOURCETARGET    (@"-s")
 #define KEY_PUBLISHTARGET   (@"-p")
+
+#define KEY_INPUT           (@"-i")
+#define KEY_INPUTFILE       (@"-f")
+
 #define KEY_DEBUG           (@"--d")
 #define KEY_LIMIT           (@"--l")
 

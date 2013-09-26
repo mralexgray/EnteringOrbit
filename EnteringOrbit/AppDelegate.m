@@ -26,6 +26,8 @@
     NSString * m_tailTarget;
     NSString * m_publishTarget;
     
+    NSString * m_firstMessage;
+    
     WebSocketClientController * m_client;
 }
 
@@ -33,7 +35,7 @@
 
 - (id) initAppDelegateWithParam:(NSDictionary * )dict {
     if (dict[@"-NSDocumentRevisionsDebugMode"]) {
-        NSLog(@"debug run -> exit");
+        NSLog(@"EnteringOrbit: debug run -> exit");
         exit(0);
     }
     
@@ -48,18 +50,35 @@
         
         paramDict = [[NSDictionary alloc]initWithDictionary:dict];
         
-        NSAssert1(dict[KEY_SOURCETARGET], @"source-of-tail target required. %@ e.g. targetUserName@targetMachineName", KEY_SOURCETARGET);
+        NSAssert1(dict[KEY_SOURCETARGET], @"EnteringOrbit: source-of-tail target required. %@ e.g. targetUserName@targetMachineName", KEY_SOURCETARGET);
         m_sourcetTarget = [[NSString alloc]initWithString:paramDict[KEY_SOURCETARGET]];
         
         
-        NSAssert1(dict[KEY_TAILTARGET], @"tail target required. %@  e.g. ./something.txt", KEY_TAILTARGET);
+        NSAssert1(dict[KEY_TAILTARGET], @"EnteringOrbit: tail target required. %@  e.g. ./something.txt", KEY_TAILTARGET);
         m_tailTarget = [[NSString alloc]initWithString:paramDict[KEY_TAILTARGET]];
         
-        NSAssert1(dict[KEY_PUBLISHTARGET], @"connect target required. %@ e.g. ws://s.o.m.ewhere:someport", KEY_PUBLISHTARGET);
-        m_publishTarget = [[NSString alloc]initWithString:paramDict[KEY_PUBLISHTARGET]];
+        if (paramDict[KEY_PUBLISHTARGET]) m_publishTarget = [[NSString alloc]initWithString:paramDict[KEY_PUBLISHTARGET]];
+        
+        if (paramDict[KEY_INPUTFILE]) m_firstMessage = [self loadFile:paramDict[KEY_INPUTFILE]];
+        
 
     }
     return self;
+}
+
+- (NSString * ) loadFile:(NSString * )filePath {
+    NSFileHandle * readHandle = [NSFileHandle fileHandleForReadingAtPath:filePath];
+    
+
+    if (readHandle) {
+        NSData * data = [readHandle readDataToEndOfFile];
+        NSString * fileContentsStr = [[NSString alloc]initWithData:data encoding:NSUTF8StringEncoding];
+        if (paramDict[KEY_DEBUG]) NSLog(@"EnteringOrbit: file contents is:%@", fileContentsStr);
+        
+        return fileContentsStr;
+    }
+    NSAssert1(false, @"EnteringOrbit: failed to read -f %@", filePath);
+    return nil;
 }
 
 
@@ -72,8 +91,12 @@
 - (void) run {
     m_state = STATE_MONOCAST_CONNECTING;
     
-    m_client = [[WebSocketClientController alloc]initWithTargetAddress:@"" withMaster:[messenger myNameAndMID]];
-    [m_client connect:m_publishTarget];
+    if (paramDict[KEY_PUBLISHTARGET]) {
+        m_client = [[WebSocketClientController alloc]initWithTargetAddress:@"" withMaster:[messenger myNameAndMID]];
+        [m_client connect:m_publishTarget];
+    } else {
+        [self drainViaTail];
+    }
 }
 
 - (void) drainViaTail {
@@ -132,7 +155,6 @@
     
     m_state = STATE_SOURCE_CONNECTING;
 
-    
     // read & publish
     NSFileHandle * publishHandle = [readPipe fileHandleForReading];
     
@@ -221,6 +243,11 @@
         case EXEC_CONNECTED:{
             if (paramDict[KEY_DEBUG]) NSLog(@"WebSocket connected to publishTarget.");
             m_state = STATE_MONOCAST_CONNECTED;
+            
+            if (paramDict[KEY_INPUTFILE]) {
+                [self send:m_firstMessage];
+            }
+            
             [self drainViaTail];
             break;
         }
@@ -238,8 +265,11 @@
  特定のkey位置以降に開始されるsend
  */
 - (void) send:(NSString * )input {
-    if (paramDict[KEY_DEBUG]) NSLog(@"読sending　%@", input);
-    [m_client send:input];
+    if (paramDict[KEY_PUBLISHTARGET]){
+        [m_client send:input];
+    } else {
+        NSLog(@"EnteringOrbit: %@", input);
+    }
 }
 
 - (void) close {
