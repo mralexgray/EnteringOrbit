@@ -26,6 +26,7 @@
 }
 
 - (void)tearDown {
+    [delegate close];
     // Put teardown code here. This method is called after the invocation of each test method in the class.
     [super tearDown];
 }
@@ -34,7 +35,7 @@
 
 - (void)testRunWithValidParam {
     NSDictionary * paramDict = @{
-                                 KEY_SOURCETARGET:TEST_CONNECT_TARGET,
+                                 KEY_SOURCETARGET:TEST_SOURCE_TARGET,
                                  KEY_TAILTARGET:TEST_TAIL_TARGET,
                                  KEY_CONNECTTARGET:TEST_CONNECT_TARGET};
     
@@ -44,7 +45,7 @@
 
 - (void)testRunWithValidParamWait1TailEmit {
     NSDictionary * paramDict = @{
-                                 KEY_SOURCETARGET:TEST_CONNECT_TARGET,
+                                 KEY_SOURCETARGET:TEST_SOURCE_TARGET,
                                  KEY_TAILTARGET:TEST_TAIL_TARGET,
                                  KEY_CONNECTTARGET:TEST_CONNECT_TARGET,
                                  KEY_LIMIT:TEST_LIMIT_5};
@@ -63,7 +64,7 @@
 
 - (void)testWebSocketClientAwaken {
     NSDictionary * paramDict = @{
-                                 KEY_SOURCETARGET:TEST_CONNECT_TARGET,
+                                 KEY_SOURCETARGET:TEST_SOURCE_TARGET,
                                  KEY_TAILTARGET:TEST_TAIL_TARGET,
                                  KEY_CONNECTTARGET:TEST_CONNECT_TARGET,
                                  KEY_LIMIT:TEST_LIMIT_5};

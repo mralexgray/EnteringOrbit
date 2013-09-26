@@ -14,6 +14,8 @@
 enum EXEC {
     EXEC_CONNECT,
     EXEC_CONNECTED,
+    EXEC_FAILED,
+    
     EXEC_SEND
 };
 
@@ -21,10 +23,10 @@ enum EXEC {
 
 - (id) initWithTargetAddress:(NSString * )address withMaster:(NSString * )masternameAndId;
 
-- (BOOL) connected;
-
-
 - (void) connect:(NSString * )url;
+- (BOOL) isConnected;
+
 - (void) send:(NSString * )message;
 
+- (void) close;
 @end

@@ -76,7 +76,7 @@
 }
 
 - (void) drainViaTail {
-    m_state = STATE_MONOCAST_CONNECTED;
+
     NSString * expect = @"/usr/bin/expect";
     
     //    http://www.math.kobe-u.ac.jp/~kodama/tips-expect.html
@@ -91,7 +91,7 @@
     NSString * cHead = @"-c";
     
     // connect
-    NSString * connectTarget = [[NSString alloc]initWithFormat:@"spawn ssh %@;", m_connectTarget];
+    NSString * sourceTarget = [[NSString alloc]initWithFormat:@"spawn ssh %@;", m_sourcetTarget];
     
     
     // echo
@@ -109,7 +109,7 @@
     /*
      combine lines
      */
-    NSArray * expectParamArray = @[connectTarget,
+    NSArray * expectParamArray = @[sourceTarget,
                                    echoPhrase,
                                    tailPhrase,
                                    @"interact;"];
@@ -128,7 +128,8 @@
     [ssh setStandardOutput:readPipe];
     [ssh setStandardError:readPipe];
     [ssh launch];
-    m_state = STATE_SOUCE_CONNECTING;
+    
+    m_state = STATE_SOURCE_CONNECTING;
 
     
     // read & publish
@@ -144,7 +145,7 @@
     
     while(fgets(buffer, BUFSIZ, fp)) {
         NSString * message = [NSString stringWithCString:buffer encoding:NSUTF8StringEncoding];
-        
+        NSLog(@"message %@", message);
         switch (m_state) {
             case STATE_TAILING:{
                 [self send:message];
@@ -152,7 +153,7 @@
                 break;
             }
                 
-            case STATE_WAITING_TAILKEY:{
+            case STATE_WAITING_TAILKEY:{//skip 1 line
                 m_state = STATE_TAILING;
                 break;
             }
@@ -182,7 +183,7 @@
 }
 
 - (BOOL) isConnectedToServer {
-    return [m_client connected];
+    return [m_client isConnected];
 }
 
 
@@ -190,7 +191,12 @@
 - (void) receiver:(NSNotification * ) notif {
     switch ([messenger execFrom:EO_WSCONT viaNotification:notif]) {
         case EXEC_CONNECTED:{
+            m_state = STATE_MONOCAST_CONNECTED;
             [self drainViaTail];
+            break;
+        }
+        case EXEC_FAILED:{
+            m_state = STATE_MONOCAST_FAILED;
             break;
         }
         default:
@@ -204,7 +210,12 @@
  特定のkey位置以降に開始されるsend
  */
 - (void) send:(NSString * )input {
-    NSLog(@"読めるのかしら　%@", input);
+    if (paramDict[KEY_DEBUG]) NSLog(@"読sending　%@", input);
+    [m_client send:input];
 }
 
+- (void) close {
+    [m_client close];
+    [messenger closeConnection];
+}
 @end

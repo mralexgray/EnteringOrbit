@@ -22,16 +22,22 @@
     return self;
 }
 
+- (void) receiver:(NSNotification * )notif {}
 
-- (BOOL) connected {
-    if (ws) return true;
-    return false;
-}
 
 - (void) connect:(NSString * )url {
     ws = [[SRWebSocket alloc] initWithURL:[NSURL URLWithString:url]];
     [ws setDelegate:self];
+    [ws open];
 }
+
+
+- (BOOL) isConnected {
+    if (ws) return true;
+    return false;
+}
+
+
 
 - (void) send:(NSString * )message {
     [ws send:message];
@@ -44,11 +50,13 @@
 }
 
 - (void)webSocket:(SRWebSocket * )webSocket didFailWithError:(NSError * )error {
-    
+    [messenger callParent:EXEC_FAILED, nil];
 }
 
-- (void)webSocket:(SRWebSocket * )webSocket didCloseWithCode:(NSInteger)code reason:(NSString * )reason wasClean:(BOOL)wasClean {
-    
-}
+- (void)webSocket:(SRWebSocket * )webSocket didCloseWithCode:(NSInteger)code reason:(NSString * )reason wasClean:(BOOL)wasClean {}
 
+- (void) close {
+    [ws close];
+    [messenger closeConnection];
+}
 @end
