@@ -180,6 +180,7 @@ enum MASTER_EXEC {
     long line = 0;
     
     while(fgets(buffer, BUFSIZ, fp)) {
+        
         NSString * message = [NSString stringWithCString:buffer encoding:NSUTF8StringEncoding];
         [self formatOutput:[NSString stringWithFormat:@"debug: message: %@", message]];
         
@@ -211,7 +212,7 @@ enum MASTER_EXEC {
         if (limitLineNum != 0 && limitLineNum < line) break;
         if (m_state == STATE_MONOCAST_FAILED) break;
         if (m_state == STATE_SOURCE_FAILED) break;
-
+        
     }
     
     // output message
@@ -227,6 +228,8 @@ enum MASTER_EXEC {
     // kill task
     [m_ssh terminate];
     
+    
+    [m_ssh waitUntilExit];
     
     // dead
     [self close];
@@ -304,8 +307,6 @@ enum MASTER_EXEC {
 }
 
 - (void) close {
-    [m_ssh terminate];
-    
     [m_client close];
     [messenger closeConnection];
 }
