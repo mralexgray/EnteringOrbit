@@ -53,7 +53,7 @@
     [delegate run];
     
     // wait for line-tailed
-    while ([delegate status] < STATE_TAILING) {
+    while ([delegate status] != STATE_TAILING) {
         [[NSRunLoop mainRunLoop]runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
     }
     
@@ -89,7 +89,7 @@
     [delegate run];
     
     // wait for line-tailed
-    while ([delegate status] < STATE_TAILING) {
+    while ([delegate status] != STATE_TAILING) {
         [[NSRunLoop mainRunLoop]runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
     }
     
@@ -108,7 +108,7 @@
     [delegate run];
     
     // wait for line-tailed
-    while ([delegate status] < STATE_MONOCAST_FAILED) {
+    while ([delegate status] != STATE_MONOCAST_FAILED) {
         [[NSRunLoop mainRunLoop]runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
     }
     
@@ -127,7 +127,7 @@
     [delegate run];
     
     // wait for line-tailed
-    while ([delegate status] < STATE_SOURCE_FAILED) {
+    while ([delegate status] != STATE_SOURCE_FAILED) {
         [[NSRunLoop mainRunLoop]runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
     }
     
@@ -146,7 +146,7 @@
     [delegate run];
     
     // wait for line-tailed
-    while ([delegate status] < STATE_SOURCE_FAILED) {
+    while ([delegate status] != STATE_SOURCE_FAILED) {
         [[NSRunLoop mainRunLoop]runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
     }
     
@@ -168,7 +168,7 @@
     [delegate run];
     
     // wait for line-tailed
-    while ([delegate status] < STATE_SOURCE_FAILED) {
+    while ([delegate status] != STATE_SOURCE_FAILED) {
         [[NSRunLoop mainRunLoop]runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
     }
     
@@ -188,12 +188,34 @@
     [delegate run];
     
     // wait for line-tailed
-    while ([delegate status] < STATE_SOURCE_FAILED) {
+    while ([delegate status] != STATE_SOURCE_FAILED) {
         [[NSRunLoop mainRunLoop]runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
     }
     
     XCTAssert([delegate status] == STATE_SOURCE_FAILED, @"not match, %d", [delegate status]);
 }
+
+- (void) testBeforeFilterFailedToLoad {
+    NSDictionary * paramDict = @{
+                                 KEY_INPUTFILE:TEST_DUMMY_INPUTFILEPATH,
+                                 KEY_DEBUG:@"",
+                                 KEY_SOURCETARGET:TEST_DUMMY_SOURCE_TARGET,
+                                 KEY_TAILTARGET:TEST_TAIL_TARGET,
+                                 KEY_PUBLISHTARGET:TEST_PUBLISH_TARGET,
+                                 KEY_LIMIT:TEST_LIMIT_5};
+
+    @try {
+        delegate = [[AppDelegate alloc] initAppDelegateWithParam:paramDict];
+    }
+    @catch (NSException * exception) {
+        
+    }
+    @finally {
+        NSLog(@"delegate %@", delegate);
+    }
+    
+}
+
 
 
 @end

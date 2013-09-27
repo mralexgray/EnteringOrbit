@@ -15,6 +15,10 @@
 
 #define COMMAND_TAIL    (@"/usr/bin/tail")
 
+enum MASTER_EXEC {
+    EXEC_DRAIN
+};
+
 @implementation AppDelegate {
     KSMessenger * messenger;
     
@@ -29,13 +33,15 @@
     NSString * m_firstMessage;
     
     WebSocketClientController * m_client;
+    
+    NSTask * m_ssh;
 }
 
 
 
 - (id) initAppDelegateWithParam:(NSDictionary * )dict {
     if (dict[@"-NSDocumentRevisionsDebugMode"]) {
-        NSLog(@"EnteringOrbit: debug run -> exit");
+        [self formatOutput:@"debug run -> exit"];
         exit(0);
     }
     
@@ -50,7 +56,8 @@
         
         paramDict = [[NSDictionary alloc]initWithDictionary:dict];
         
-        NSAssert1(dict[KEY_SOURCETARGET], @"EnteringOrbit: source-of-tail target required. %@ e.g. targetUserName@targetMachineName", KEY_SOURCETARGET);
+        NSString * message = [self formatOutput:[NSString stringWithFormat:@"source-of-tail target required. %@ e.g. targetUserName@targetMachineName", KEY_SOURCETARGET]];
+        NSAssert(dict[KEY_SOURCETARGET], message);
         m_sourcetTarget = [[NSString alloc]initWithString:paramDict[KEY_SOURCETARGET]];
         
         
@@ -95,7 +102,9 @@
         m_client = [[WebSocketClientController alloc]initWithTargetAddress:@"" withMaster:[messenger myNameAndMID]];
         [m_client connect:m_publishTarget];
     } else {
-        [self drainViaTail];
+        [messenger callMyself:EXEC_DRAIN,
+         [messenger withDelay:0.01],
+         nil];
     }
 }
 
@@ -143,15 +152,15 @@
     
     
     // ssh task
-    NSTask * ssh = [[NSTask alloc]init];
-    [ssh setLaunchPath:expect];
-    [ssh setArguments:paramArray];
+    m_ssh = [[NSTask alloc]init];
+    [m_ssh setLaunchPath:expect];
+    [m_ssh setArguments:paramArray];
     
     NSPipe * readPipe = [[NSPipe alloc]init];
     
-    [ssh setStandardOutput:readPipe];
-    [ssh setStandardError:readPipe];
-    [ssh launch];
+    [m_ssh setStandardOutput:readPipe];
+    [m_ssh setStandardError:readPipe];
+    [m_ssh launch];
     
     m_state = STATE_SOURCE_CONNECTING;
 
@@ -172,7 +181,7 @@
     
     while(fgets(buffer, BUFSIZ, fp)) {
         NSString * message = [NSString stringWithCString:buffer encoding:NSUTF8StringEncoding];
-        if (paramDict[KEY_DEBUG]) NSLog(@"message %@", message);
+        [self formatOutput:[NSString stringWithFormat:@"debug: message: %@", message]];
         
         switch (m_state) {
             case STATE_TAILING:{
@@ -187,10 +196,11 @@
             }
                 
             default:{//STATE_SOUCE_CONNECTED
-                
                 for (NSString * errorSuffix in peerErrors) {
-                    if ([message hasPrefix:errorSuffix]) m_state = STATE_SOURCE_FAILED;
-                    m_error = [[NSString alloc]initWithFormat:@"%@ %@", errorSuffix, paramDict[KEY_SOURCETARGET]];
+                    if ([message hasPrefix:errorSuffix]) {
+                        m_state = STATE_SOURCE_FAILED;
+                        m_error = [[NSString alloc]initWithFormat:@"%@ %@", errorSuffix, paramDict[KEY_SOURCETARGET]];
+                    }
                 }
                 
                 if ([message hasPrefix:indexStr]) m_state = STATE_WAITING_TAILKEY;
@@ -198,25 +208,25 @@
             }
         }
         
-        if (limitLineNum != 0 && limitLineNum < line) {
-            // break loop.
-            break;
-        }
-        if (m_state == STATE_SOURCE_FAILED) {
-            // break loop.
-            break;
-        }
+        if (limitLineNum != 0 && limitLineNum < line) break;
+        if (m_state == STATE_MONOCAST_FAILED) break;
+        if (m_state == STATE_SOURCE_FAILED) break;
+
     }
     
     // output message
     switch (m_state) {
         case STATE_SOURCE_FAILED:{
-            NSLog(@"EnteringOrbit: %@", m_error);
+            [self formatOutput:m_error];
             break;
         }
         default:
             break;
     }
+    
+    // kill task
+    [m_ssh terminate];
+    
     
     // dead
     [self close];
@@ -241,7 +251,7 @@
 - (void) receiver:(NSNotification * ) notif {
     switch ([messenger execFrom:EO_WSCONT viaNotification:notif]) {
         case EXEC_CONNECTED:{
-            if (paramDict[KEY_DEBUG]) NSLog(@"WebSocket connected to publishTarget.");
+            [self formatOutput:@"WebSocket connected to publishTarget."];
             m_state = STATE_MONOCAST_CONNECTED;
             
             if (paramDict[KEY_INPUTFILE]) {
@@ -253,9 +263,18 @@
         }
         case EXEC_FAILED:{
             m_state = STATE_MONOCAST_FAILED;
-            NSLog(@"EnteringOrbit: failed to connect: %@", paramDict[KEY_PUBLISHTARGET]);
+            [self formatOutput:[NSString stringWithFormat:@"failed to connect: %@", paramDict[KEY_PUBLISHTARGET]]];
             break;
         }
+        default:
+            break;
+    }
+    
+    switch ([messenger execFrom:[messenger myName] viaNotification:notif]) {
+        case EXEC_DRAIN:
+            [self drainViaTail];
+            break;
+            
         default:
             break;
     }
@@ -264,16 +283,31 @@
 /**
  特定のkey位置以降に開始されるsend
  */
-- (void) send:(NSString * )input {
+- (void) send:(NSString * )message {
     if (paramDict[KEY_PUBLISHTARGET]){
-        [m_client send:input];
+        [m_client send:message];
     } else {
-        NSLog(@"EnteringOrbit: %@", input);
+        [self formatOutput:message];
     }
 }
 
+- (NSString * ) formatOutput:(NSString * )message {
+    if (paramDict[KEY_DEBUG]) {
+        NSString * logMessage = [[NSString alloc] initWithFormat:@"EnteringOrbit: debug: %@", message];
+        NSLog(@"%@", logMessage);
+        return logMessage;
+    }
+    
+    NSString * logMessage = [[NSString alloc]initWithFormat:@"EnteringOrbit: %@", message];
+    NSLog(@"%@", logMessage);
+    return logMessage;
+}
+
 - (void) close {
+    [m_ssh terminate];
+    
     [m_client close];
     [messenger closeConnection];
 }
+
 @end
