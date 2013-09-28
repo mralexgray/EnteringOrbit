@@ -53,11 +53,9 @@
     [delegate run];
     
     // wait for line-tailed
-    while ([delegate status] != STATE_TAILING) {
+    while ([delegate status] != STATE_SHUTDOWNED) {
         [[NSRunLoop mainRunLoop]runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
     }
-    
-    XCTAssert([delegate isTailing], @"not tailing");
 }
 
 
@@ -89,11 +87,9 @@
     [delegate run];
     
     // wait for line-tailed
-    while ([delegate status] != STATE_TAILING) {
+    while ([delegate status] != STATE_SHUTDOWNED) {
         [[NSRunLoop mainRunLoop]runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
     }
-    
-    XCTAssert([delegate isTailing], @"not tailing");
 }
 
 
@@ -130,11 +126,11 @@
     [delegate run];
     
     // wait for line-tailed
-    while ([delegate status] != STATE_TAILING) {
+    while ([delegate status] != STATE_SHUTDOWNED) {
         [[NSRunLoop mainRunLoop]runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
     }
     
-    XCTAssert([delegate status] == STATE_TAILING, @"not match, %d", [delegate status]);
+    XCTAssert([delegate status] == STATE_SHUTDOWNED, @"not match, %d", [delegate status]);
 }
 
 - (void) testBeforeFilterWorkWithWebSocket {

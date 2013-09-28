@@ -16,7 +16,6 @@
 #define COMMAND_TAIL    (@"/usr/bin/tail")
 
 enum MASTER_EXEC {
-    EXEC_HEALTHCHECK,
     EXEC_DRAIN
 };
 
@@ -37,7 +36,16 @@ enum MASTER_EXEC {
     
     NSTask * m_ssh;
     
-    NSPipe * m_writePipe;
+    NSPipe * m_writePipe;//継続中に入力するのは不可能っぽい。
+    
+    FILE * fp;
+    char m_buffer[BUFSIZ];
+    
+    NSString * m_indexStr;
+    NSArray * m_peerErrors;
+    
+    int m_lineMax;
+    int m_lineCount;
 }
 
 
@@ -97,7 +105,7 @@ enum MASTER_EXEC {
 }
 
 - (void) applicationWillTerminate:(NSNotification * )notification {
-    NSLog(@"hereComes %@", notification);
+    NSLog(@"applicationWillTerminate hereComes %@", notification);
 }
 
 
@@ -109,16 +117,11 @@ enum MASTER_EXEC {
         m_client = [[WebSocketClientController alloc]initWithMaster:[messenger myNameAndMID]];
         [m_client connect:m_publishTarget];
     } else {
-        [messenger callMyself:EXEC_HEALTHCHECK, nil];
-        
-        [messenger callMyself:EXEC_DRAIN,
-         [messenger withDelay:0.01],
-         nil];
+        [self startDrain];
     }
 }
 
-- (void) drainViaTail {
-
+- (void) startDrain {
     NSString * expect = @"/usr/bin/expect";
     
     //    http://www.math.kobe-u.ac.jp/~kodama/tips-expect.html
@@ -129,6 +132,9 @@ enum MASTER_EXEC {
     //    send \"tail -f ./Desktop/130715_2_テロップ.txt\n\";
     //    interact;"
     
+    // load errors-suffix
+    m_peerErrors = [[NSArray alloc] initWithObjects:DEFINE_PEER_ERRORS];
+
     
     NSString * cHead = @"-c";
     
@@ -138,9 +144,9 @@ enum MASTER_EXEC {
     
     // echo
     CFUUIDRef uuidObj = CFUUIDCreate(nil);
-    NSString * indexStr = (NSString * )CFBridgingRelease(CFUUIDCreateString(nil, uuidObj));
+    m_indexStr = (NSString * )CFBridgingRelease(CFUUIDCreateString(nil, uuidObj));
     CFRelease(uuidObj);
-    NSString * echoPhrase = [[NSString alloc]initWithFormat:@"send \"echo %@\n\";", indexStr];
+    NSString * echoPhrase = [[NSString alloc]initWithFormat:@"send \"echo %@\n\";", m_indexStr];
     
     
     // tail
@@ -176,18 +182,25 @@ enum MASTER_EXEC {
     
     m_state = STATE_SOURCE_CONNECTING;
 
+    
+    m_lineMax = 0; m_lineCount = 0;
+    if (paramDict[KEY_LIMIT]) m_lineMax = [paramDict[KEY_LIMIT] intValue];
+    
     // read & publish
     NSFileHandle * publishHandle = [readPipe fileHandleForReading];
     
-    // load errors-suffix
-    NSArray * peerErrors = [[NSArray alloc] initWithObjects:DEFINE_PEER_ERRORS];
-    NSString * m_error;
-    
-    char buffer[BUFSIZ];
-    FILE * fp = fdopen([publishHandle fileDescriptor], "r");
-    
-    while(fgets(buffer, BUFSIZ, fp)) {//kvoを試すか。でないとタイマーでの死活監視ができない。できなくてもいいのかなー終了さえできれば。
-        NSString * message = [NSString stringWithCString:buffer encoding:NSUTF8StringEncoding];
+    fp = fdopen([publishHandle fileDescriptor], "r");
+   
+    [messenger callMyself:EXEC_DRAIN, nil];
+}
+
+/**
+ tailが始まってしまったら、この関数はfgetsでロックが発生する。アプリケーション全体が止まる。whileループだろうが関係ない、
+ fgetsで止まる。ふーむ、、別スレッドになってるはずだけど止まってしまう。いっそ別exeをrunするか。
+ */
+- (NSString * ) drain {
+    while (fgets(m_buffer, BUFSIZ, fp)) {
+        NSString * message = [NSString stringWithCString:m_buffer encoding:NSUTF8StringEncoding];
         [self formatOutput:[NSString stringWithFormat:@"message: %@", message]];
         
         switch (m_state) {
@@ -202,38 +215,23 @@ enum MASTER_EXEC {
             }
                 
             default:{//STATE_SOUCE_CONNECTED
-                for (NSString * errorSuffix in peerErrors) {
+                for (NSString * errorSuffix in m_peerErrors) {
                     if ([message hasPrefix:errorSuffix]) {
                         m_state = STATE_SOURCE_FAILED;
-                        m_error = [[NSString alloc]initWithFormat:@"%@ %@", errorSuffix, paramDict[KEY_SOURCETARGET]];
+                        return [[NSString alloc]initWithFormat:@"%@ %@", errorSuffix, paramDict[KEY_SOURCETARGET]];
                     }
                 }
                 
-                if ([message hasPrefix:indexStr]) m_state = STATE_WAITING_TAILKEY;
+                if ([message hasPrefix:m_indexStr]) m_state = STATE_WAITING_TAILKEY;
                 break;
             }
         }
+        m_lineCount++;
         
-        if (m_state == STATE_MONOCAST_FAILED) break;
-        if (m_state == STATE_SOURCE_FAILED) break;
+        if (m_lineMax != 0 && m_lineMax <= m_lineCount) m_state = STATE_SHUTDOWNED;
     }
-    
-    // output message
-    switch (m_state) {
-        case STATE_SOURCE_FAILED:{
-            [self formatOutput:m_error];
-            break;
-        }
-        default:
-            break;
-    }
-    
-    // dead
-    [self close];
+    return nil;
 }
-
-int count = 0;
-
 
 
 - (BOOL) status {
@@ -261,11 +259,7 @@ int count = 0;
                 [self send:m_firstMessage];
             }
             
-            [messenger callMyself:EXEC_HEALTHCHECK, nil];
-            
-            [messenger callMyself:EXEC_DRAIN,
-             [messenger withDelay:0.01],
-             nil];
+            [self startDrain];
             break;
         }
         case EXEC_FAILED:{
@@ -278,25 +272,30 @@ int count = 0;
     }
     
     switch ([messenger execFrom:[messenger myName] viaNotification:notif]) {
-        case EXEC_HEALTHCHECK:{
+        case EXEC_DRAIN:{
+            NSString * errorMessage = [self drain];
             
-            if ([m_ssh isRunning]) {
-                NSLog(@"hereComesRunning %d", count);
-                //        NSData * data = [@"pwd" dataUsingEncoding:NSUTF8StringEncoding];
-                //        [[m_writePipe fileHandleForWriting]writeData:data];
-            } else {
-                NSLog(@"closed!");
-                //            break;
+            // 中止 or error
+            if (m_state == STATE_SHUTDOWNED) {
+                [self close];
+                break;
+            }
+            if (m_state == STATE_MONOCAST_FAILED) {
+                [self close];
+                break;
+            }
+            if (m_state == STATE_SOURCE_FAILED) {
+                [self formatOutput:errorMessage];
+
+                [self close];
+                break;
             }
             
-            [messenger callMyself:EXEC_HEALTHCHECK,
-             [messenger withDelay:1.0],
+            [messenger callMyself:EXEC_DRAIN,
+             [messenger withDelay:0.001],
              nil];
             break;
         }
-        case EXEC_DRAIN:
-            [self drainViaTail];
-            break;
             
         default:
             break;
@@ -331,9 +330,10 @@ int count = 0;
 - (void) close {
     // exit ssh
     [[m_writePipe fileHandleForWriting] closeFile];
+    NSLog(@"or %hhd", [m_ssh isRunning]);
     
     [m_ssh waitUntilExit];
-    
+    NSLog(@"or2 %hhd", [m_ssh isRunning]);
     
     [m_client close];
     [messenger closeConnection];

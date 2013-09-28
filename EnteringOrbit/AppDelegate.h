@@ -34,7 +34,7 @@ enum STATE {
     STATE_WAITING_TAILKEY,
     
     STATE_TAILING,
-    STATE_FAILED_TO_TAIL
+    STATE_SHUTDOWNED
 };
 
 
@@ -48,7 +48,6 @@ enum STATE {
 
 - (id) initAppDelegateWithParam:(NSDictionary * )dict;
 - (void) run;
-- (void) drainViaTail;
 
 - (BOOL) status;
 
