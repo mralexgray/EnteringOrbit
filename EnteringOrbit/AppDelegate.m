@@ -16,6 +16,7 @@
 #define COMMAND_TAIL    (@"/usr/bin/tail")
 
 enum MASTER_EXEC {
+    EXEC_HEALTHCHECK,
     EXEC_DRAIN
 };
 
@@ -35,13 +36,15 @@ enum MASTER_EXEC {
     WebSocketClientController * m_client;
     
     NSTask * m_ssh;
+    
+    NSPipe * m_writePipe;
 }
 
 
 
 - (id) initAppDelegateWithParam:(NSDictionary * )dict {
     if (dict[@"-NSDocumentRevisionsDebugMode"]) {
-        [self formatOutput:@"debug run -> exit"];
+        [self formatOutput:@"run -> exit"];
         exit(0);
     }
     
@@ -80,7 +83,7 @@ enum MASTER_EXEC {
     if (readHandle) {
         NSData * data = [readHandle readDataToEndOfFile];
         NSString * fileContentsStr = [[NSString alloc]initWithData:data encoding:NSUTF8StringEncoding];
-        if (paramDict[KEY_DEBUG]) NSLog(@"EnteringOrbit: file contents is:%@", fileContentsStr);
+        [self formatOutput:[NSString stringWithFormat:@"EnteringOrbit: file contents is:%@", fileContentsStr]];
         
         return fileContentsStr;
     }
@@ -89,8 +92,12 @@ enum MASTER_EXEC {
 }
 
 
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
+- (void) applicationDidFinishLaunching:(NSNotification * )aNotification {
     [self run];
+}
+
+- (void) applicationWillTerminate:(NSNotification * )notification {
+    NSLog(@"hereComes %@", notification);
 }
 
 
@@ -99,9 +106,11 @@ enum MASTER_EXEC {
     m_state = STATE_MONOCAST_CONNECTING;
     
     if (paramDict[KEY_PUBLISHTARGET]) {
-        m_client = [[WebSocketClientController alloc]initWithTargetAddress:@"" withMaster:[messenger myNameAndMID]];
+        m_client = [[WebSocketClientController alloc]initWithMaster:[messenger myNameAndMID]];
         [m_client connect:m_publishTarget];
     } else {
+        [messenger callMyself:EXEC_HEALTHCHECK, nil];
+        
         [messenger callMyself:EXEC_DRAIN,
          [messenger withDelay:0.01],
          nil];
@@ -145,7 +154,8 @@ enum MASTER_EXEC {
     NSArray * expectParamArray = @[sourceTarget,
                                    echoPhrase,
                                    tailPhrase,
-                                   @"interact;"];
+                                   @"interact;"
+                                   ];
     
     NSArray * paramArray = @[cHead, [expectParamArray componentsJoinedByString:@"\n"]];
     
@@ -156,8 +166,10 @@ enum MASTER_EXEC {
     [m_ssh setLaunchPath:expect];
     [m_ssh setArguments:paramArray];
     
+    m_writePipe = [[NSPipe alloc]init];
     NSPipe * readPipe = [[NSPipe alloc]init];
     
+    [m_ssh setStandardInput:m_writePipe];
     [m_ssh setStandardOutput:readPipe];
     [m_ssh setStandardError:readPipe];
     [m_ssh launch];
@@ -172,22 +184,15 @@ enum MASTER_EXEC {
     NSString * m_error;
     
     char buffer[BUFSIZ];
-    
-    int limitLineNum = [paramDict[KEY_LIMIT] intValue];
-    
     FILE * fp = fdopen([publishHandle fileDescriptor], "r");
     
-    long line = 0;
-    
-    while(fgets(buffer, BUFSIZ, fp)) {
-        
+    while(fgets(buffer, BUFSIZ, fp)) {//kvoを試すか。でないとタイマーでの死活監視ができない。できなくてもいいのかなー終了さえできれば。
         NSString * message = [NSString stringWithCString:buffer encoding:NSUTF8StringEncoding];
-        [self formatOutput:[NSString stringWithFormat:@"debug: message: %@", message]];
+        [self formatOutput:[NSString stringWithFormat:@"message: %@", message]];
         
         switch (m_state) {
             case STATE_TAILING:{
                 [self send:message];
-                line++;
                 break;
             }
                 
@@ -209,10 +214,8 @@ enum MASTER_EXEC {
             }
         }
         
-        if (limitLineNum != 0 && limitLineNum < line) break;
         if (m_state == STATE_MONOCAST_FAILED) break;
         if (m_state == STATE_SOURCE_FAILED) break;
-        
     }
     
     // output message
@@ -225,15 +228,12 @@ enum MASTER_EXEC {
             break;
     }
     
-    // kill task
-    [m_ssh terminate];
-    
-    
-    [m_ssh waitUntilExit];
-    
     // dead
     [self close];
 }
+
+int count = 0;
+
 
 
 - (BOOL) status {
@@ -261,7 +261,11 @@ enum MASTER_EXEC {
                 [self send:m_firstMessage];
             }
             
-            [self drainViaTail];
+            [messenger callMyself:EXEC_HEALTHCHECK, nil];
+            
+            [messenger callMyself:EXEC_DRAIN,
+             [messenger withDelay:0.01],
+             nil];
             break;
         }
         case EXEC_FAILED:{
@@ -274,6 +278,22 @@ enum MASTER_EXEC {
     }
     
     switch ([messenger execFrom:[messenger myName] viaNotification:notif]) {
+        case EXEC_HEALTHCHECK:{
+            
+            if ([m_ssh isRunning]) {
+                NSLog(@"hereComesRunning %d", count);
+                //        NSData * data = [@"pwd" dataUsingEncoding:NSUTF8StringEncoding];
+                //        [[m_writePipe fileHandleForWriting]writeData:data];
+            } else {
+                NSLog(@"closed!");
+                //            break;
+            }
+            
+            [messenger callMyself:EXEC_HEALTHCHECK,
+             [messenger withDelay:1.0],
+             nil];
+            break;
+        }
         case EXEC_DRAIN:
             [self drainViaTail];
             break;
@@ -296,17 +316,25 @@ enum MASTER_EXEC {
 
 - (NSString * ) formatOutput:(NSString * )message {
     if (paramDict[KEY_DEBUG]) {
-        NSString * logMessage = [[NSString alloc] initWithFormat:@"EnteringOrbit: debug: %@", message];
+        NSString * debugMessage = [[NSString alloc] initWithFormat:@"EnteringOrbit: debug: %@", message];
+        NSLog(@"%@", debugMessage);
+        return debugMessage;
+    } else {
+        NSString * logMessage = [[NSString alloc]initWithFormat:@"EnteringOrbit: %@", message];
         NSLog(@"%@", logMessage);
         return logMessage;
     }
-    
-    NSString * logMessage = [[NSString alloc]initWithFormat:@"EnteringOrbit: %@", message];
-    NSLog(@"%@", logMessage);
-    return logMessage;
 }
 
+
+
 - (void) close {
+    // exit ssh
+    [[m_writePipe fileHandleForWriting] closeFile];
+    
+    [m_ssh waitUntilExit];
+    
+    
     [m_client close];
     [messenger closeConnection];
 }

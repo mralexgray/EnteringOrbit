@@ -21,7 +21,7 @@ enum EXEC {
 
 @interface WebSocketClientController : NSObject <SRWebSocketDelegate>
 
-- (id) initWithTargetAddress:(NSString * )address withMaster:(NSString * )masternameAndId;
+- (id) initWithMaster:(NSString * )masternameAndId;
 
 - (void) connect:(NSString * )url;
 - (BOOL) isConnected;

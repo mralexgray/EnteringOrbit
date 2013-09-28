@@ -14,7 +14,7 @@
     SRWebSocket * ws;
 }
 
-- (id) initWithTargetAddress:(NSString * )address withMaster:(NSString * )masternameAndId {
+- (id) initWithMaster:(NSString * )masternameAndId {
     if (self = [super init]) {
         messenger = [[KSMessenger alloc]initWithBodyID:self withSelector:@selector(receiver:) withName:EO_WSCONT];
         [messenger connectParent:masternameAndId];
