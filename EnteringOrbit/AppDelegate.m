@@ -41,7 +41,7 @@ enum MASTER_EXEC {
 
 - (id) initAppDelegateWithParam:(NSDictionary * )dict {
     if (dict[@"-NSDocumentRevisionsDebugMode"]) {
-        [self formatOutput:@"debug run -> exit"];
+        [self getOutputStr:@"debug run -> exit"];
         exit(0);
     }
     
@@ -56,7 +56,7 @@ enum MASTER_EXEC {
         
         paramDict = [[NSDictionary alloc]initWithDictionary:dict];
         
-        NSString * message = [self formatOutput:[NSString stringWithFormat:@"source-of-tail target required. %@ e.g. targetUserName@targetMachineName", KEY_SOURCETARGET]];
+        NSString * message = [self getOutputStr:[NSString stringWithFormat:@"source-of-tail target required. %@ e.g. targetUserName@targetMachineName", KEY_SOURCETARGET]];
         NSAssert(dict[KEY_SOURCETARGET], message);
         m_sourcetTarget = [[NSString alloc]initWithString:paramDict[KEY_SOURCETARGET]];
         
@@ -156,8 +156,10 @@ enum MASTER_EXEC {
     [m_ssh setLaunchPath:expect];
     [m_ssh setArguments:paramArray];
     
+    NSPipe * writePipe = [[NSPipe alloc]init];
     NSPipe * readPipe = [[NSPipe alloc]init];
     
+    [m_ssh setStandardInput:writePipe];
     [m_ssh setStandardOutput:readPipe];
     [m_ssh setStandardError:readPipe];
     [m_ssh launch];
@@ -182,7 +184,7 @@ enum MASTER_EXEC {
     while(fgets(buffer, BUFSIZ, fp)) {
         
         NSString * message = [NSString stringWithCString:buffer encoding:NSUTF8StringEncoding];
-        [self formatOutput:[NSString stringWithFormat:@"debug: message: %@", message]];
+        [self getOutputStr:[NSString stringWithFormat:@"message: %@", message]];
         
         switch (m_state) {
             case STATE_TAILING:{
@@ -200,11 +202,16 @@ enum MASTER_EXEC {
                 for (NSString * errorSuffix in peerErrors) {
                     if ([message hasPrefix:errorSuffix]) {
                         m_state = STATE_SOURCE_FAILED;
+
+                        NSLog(@"    %@",[self getOutputStr:@"start tailing"]);
                         m_error = [[NSString alloc]initWithFormat:@"%@ %@", errorSuffix, paramDict[KEY_SOURCETARGET]];
                     }
                 }
                 
-                if ([message hasPrefix:indexStr]) m_state = STATE_WAITING_TAILKEY;
+                if ([message hasPrefix:indexStr]) {
+                    m_state = STATE_WAITING_TAILKEY;
+                    NSLog(@"    %@",[self getOutputStr:@"start tailing"]);
+                }
                 break;
             }
         }
@@ -218,7 +225,7 @@ enum MASTER_EXEC {
     // output message
     switch (m_state) {
         case STATE_SOURCE_FAILED:{
-            [self formatOutput:m_error];
+            [self getOutputStr:m_error];
             break;
         }
         default:
@@ -226,8 +233,7 @@ enum MASTER_EXEC {
     }
     
     // kill task
-    [m_ssh terminate];
-    
+    [[writePipe fileHandleForWriting] closeFile];
     
     [m_ssh waitUntilExit];
     
@@ -254,7 +260,7 @@ enum MASTER_EXEC {
 - (void) receiver:(NSNotification * ) notif {
     switch ([messenger execFrom:EO_WSCONT viaNotification:notif]) {
         case EXEC_CONNECTED:{
-            [self formatOutput:@"WebSocket connected to publishTarget."];
+            [self getOutputStr:@"WebSocket connected to publishTarget."];
             m_state = STATE_MONOCAST_CONNECTED;
             
             if (paramDict[KEY_INPUTFILE]) {
@@ -266,7 +272,7 @@ enum MASTER_EXEC {
         }
         case EXEC_FAILED:{
             m_state = STATE_MONOCAST_FAILED;
-            [self formatOutput:[NSString stringWithFormat:@"failed to connect: %@", paramDict[KEY_PUBLISHTARGET]]];
+            [self getOutputStr:[NSString stringWithFormat:@"failed to connect: %@", paramDict[KEY_PUBLISHTARGET]]];
             break;
         }
         default:
@@ -290,19 +296,20 @@ enum MASTER_EXEC {
     if (paramDict[KEY_PUBLISHTARGET]){
         [m_client send:message];
     } else {
-        [self formatOutput:message];
+        [self getOutputStr:message];
     }
 }
 
-- (NSString * ) formatOutput:(NSString * )message {
+- (NSString * ) getOutputStr:(NSString * )message {
+    NSString * logMessage;
     if (paramDict[KEY_DEBUG]) {
-        NSString * logMessage = [[NSString alloc] initWithFormat:@"EnteringOrbit: debug: %@", message];
-        NSLog(@"%@", logMessage);
-        return logMessage;
+        logMessage = [[NSString alloc] initWithFormat:@"EnteringOrbit: debug: %@", message];
+        NSLog(@"%@",logMessage);
+
+    } else {
+        logMessage = [[NSString alloc]initWithFormat:@"EnteringOrbit: %@", message];
+
     }
-    
-    NSString * logMessage = [[NSString alloc]initWithFormat:@"EnteringOrbit: %@", message];
-    NSLog(@"%@", logMessage);
     return logMessage;
 }
 

@@ -179,5 +179,25 @@
 }
 
 
+- (void) testWithoutDebug {
+    NSDictionary * paramDict = @{
+                                 KEY_INPUTFILE:TEST_INPUTFILEPATH,
+                                 KEY_SOURCETARGET:TEST_SOURCE_TARGET,
+                                 KEY_TAILTARGET:TEST_TAIL_TARGET,
+                                 KEY_PUBLISHTARGET:TEST_PUBLISH_TARGET,
+                                 KEY_LIMIT:TEST_LIMIT_5};
+    
+    delegate = [[AppDelegate alloc] initAppDelegateWithParam:paramDict];
+    [delegate run];
+    
+    // wait for line-tailed
+    while ([delegate status] != STATE_TAILING) {
+        [[NSRunLoop mainRunLoop]runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
+    }
+
+}
+
+
+
 
 @end
