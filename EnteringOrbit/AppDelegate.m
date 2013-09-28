@@ -35,6 +35,11 @@ enum MASTER_EXEC {
     WebSocketClientController * m_client;
     
     NSTask * m_ssh;
+    
+    NSString * m_header;
+    NSString * m_footer;
+    
+    NSString * m_lastMessage;
 }
 
 
@@ -68,7 +73,12 @@ enum MASTER_EXEC {
         
         if (paramDict[KEY_INPUTFILE]) m_firstMessage = [self loadFile:paramDict[KEY_INPUTFILE]];
         
-
+        if (paramDict[KEY_PUBLISHHERADER]) {
+            NSArray * headerAndFooter = [paramDict[KEY_PUBLISHHERADER] componentsSeparatedByString:DEFINE_HEADER_DELIMITER];
+            m_header = [[NSString alloc]initWithString:headerAndFooter[0]];
+            m_footer = [[NSString alloc]init];
+            if ([headerAndFooter count] == 2) m_footer = [[NSString alloc]initWithString:headerAndFooter[1]];
+        }
     }
     return self;
 }
@@ -188,6 +198,11 @@ enum MASTER_EXEC {
         
         switch (m_state) {
             case STATE_TAILING:{
+                // attach filter
+                if (paramDict[KEY_PUBLISHHERADER]) {
+                    message = [m_header stringByAppendingString:[message stringByAppendingString:m_footer]];
+                }
+                
                 [self send:message];
                 line++;
                 break;
@@ -195,6 +210,7 @@ enum MASTER_EXEC {
                 
             case STATE_WAITING_TAILKEY:{//skip 1 line
                 m_state = STATE_TAILING;
+                [self outputLogStr:@"tail start"];
                 break;
             }
                 
@@ -202,15 +218,16 @@ enum MASTER_EXEC {
                 for (NSString * errorSuffix in peerErrors) {
                     if ([message hasPrefix:errorSuffix]) {
                         m_state = STATE_SOURCE_FAILED;
-
-                        NSLog(@"    %@",[self getOutputStr:@"start tailing"]);
+                        
                         m_error = [[NSString alloc]initWithFormat:@"%@ %@", errorSuffix, paramDict[KEY_SOURCETARGET]];
+                        NSString * errorStr = [self getOutputStr:m_error];
+                        [self outputLogStr:errorStr];
                     }
                 }
                 
                 if ([message hasPrefix:indexStr]) {
                     m_state = STATE_WAITING_TAILKEY;
-                    NSLog(@"    %@",[self getOutputStr:@"start tailing"]);
+                    [self outputLogStr:@"connected to peer"];
                 }
                 break;
             }
@@ -222,15 +239,6 @@ enum MASTER_EXEC {
         
     }
     
-    // output message
-    switch (m_state) {
-        case STATE_SOURCE_FAILED:{
-            [self getOutputStr:m_error];
-            break;
-        }
-        default:
-            break;
-    }
     
     // kill task
     [[writePipe fileHandleForWriting] closeFile];
@@ -293,6 +301,7 @@ enum MASTER_EXEC {
  特定のkey位置以降に開始されるsend
  */
 - (void) send:(NSString * )message {
+    m_lastMessage = message;
     if (paramDict[KEY_PUBLISHTARGET]){
         [m_client send:message];
     } else {
@@ -305,13 +314,22 @@ enum MASTER_EXEC {
     if (paramDict[KEY_DEBUG]) {
         logMessage = [[NSString alloc] initWithFormat:@"EnteringOrbit: debug: %@", message];
         NSLog(@"%@",logMessage);
-
     } else {
         logMessage = [[NSString alloc]initWithFormat:@"EnteringOrbit: %@", message];
 
     }
     return logMessage;
 }
+
+- (void) outputLogStr:(NSString * )message {
+    NSLog(@"%@", message);
+}
+
+- (NSString * ) lastMessage {
+    return m_lastMessage;
+}
+
+
 
 - (void) close {
     [m_client close];

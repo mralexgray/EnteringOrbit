@@ -17,8 +17,12 @@
 #define KEY_INPUT           (@"-i")
 #define KEY_INPUTFILE       (@"-f")
 
+#define KEY_PUBLISHHERADER  (@"-h")
+
 #define KEY_DEBUG           (@"--d")
 #define KEY_LIMIT           (@"--l")
+
+#define DEFINE_HEADER_DELIMITER (@"***")
 
 enum STATE {
     STATE_READY,
@@ -55,6 +59,8 @@ enum STATE {
 - (BOOL) isTailing;
 
 - (BOOL) isConnectedToServer;
+
+- (NSString * ) lastMessage;
 
 - (void) close;
 

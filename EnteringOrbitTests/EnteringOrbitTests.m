@@ -12,6 +12,9 @@
 #import "TestParams.h"
 #define TEST_LIMIT_5   ([NSNumber numberWithInt:5])
 
+#define TEST_FORMAT     (@"ss@filtering:{\"name\":\"sample\",\"source\":\"***\"}")
+
+
 @interface EnteringOrbitTests : XCTestCase
 
 @end
@@ -197,6 +200,36 @@
 
 }
 
+
+
+// with filter
+
+/**
+ フィルタ込みのテスト
+ 特定の文字列をもとにheader/footerに分けて、messageを挟む。
+ message
+ */
+- (void) testWithHeaderAndFooterHasSpecificFormat {
+    NSDictionary * paramDict = @{
+                                 KEY_INPUTFILE:TEST_INPUTFILEPATH,
+                                 KEY_SOURCETARGET:TEST_SOURCE_TARGET,
+                                 KEY_TAILTARGET:TEST_TAIL_TARGET,
+                                 KEY_PUBLISHTARGET:TEST_PUBLISH_TARGET,
+                                 KEY_PUBLISHHERADER:TEST_FORMAT,
+                                 KEY_LIMIT:TEST_LIMIT_5};
+    
+    delegate = [[AppDelegate alloc] initAppDelegateWithParam:paramDict];
+    [delegate run];
+    
+    // wait for line-tailed
+    while ([delegate status] != STATE_TAILING) {
+        [[NSRunLoop mainRunLoop]runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
+    }
+    
+    // message has format
+    XCTAssert([[delegate lastMessage] hasPrefix:[TEST_FORMAT substringToIndex:5]], @"not containsm %@", [delegate lastMessage]);
+    
+}
 
 
 

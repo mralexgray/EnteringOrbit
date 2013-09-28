@@ -1,1 +1,1 @@
-ss@inputIdentity:{"id": "SampleFilter"}->showAtLog:{"message": "SampleFilter ready!"}->showStatusMessage:{"message": "SampleFilter ready!"}
+ss@inputIdentity:{"id":"SampleFilter"}->showAtLog:{"message":"SampleFilter ready!"}->showStatusMessage:{"message":"SampleFilter ready!"}->defineFilter:{"name":"sample","patterns":[{"(.*)":{"selectors":[{"showAtLog":{"message":"testing:on groups[0]:groups[1]"}}]}}]}
